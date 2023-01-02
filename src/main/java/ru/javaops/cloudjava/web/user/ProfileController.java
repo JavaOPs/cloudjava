@@ -1,5 +1,6 @@
 package ru.javaops.cloudjava.web.user;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,8 +10,6 @@ import ru.javaops.cloudjava.model.User;
 import ru.javaops.cloudjava.to.UserTo;
 import ru.javaops.cloudjava.util.UserUtil;
 import ru.javaops.cloudjava.web.AuthUser;
-
-import javax.validation.Valid;
 
 import static ru.javaops.cloudjava.util.validation.ValidationUtil.assureIdConsistent;
 

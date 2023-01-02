@@ -11,7 +11,7 @@ import ru.javaops.cloudjava.HasId;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 public abstract class BaseTo implements HasId {
-    @Schema(accessMode = Schema.AccessMode.READ_ONLY) // https://stackoverflow.com/a/28025008/548473
+    @Schema(hidden = true)
     protected Integer id;
 
     @Override

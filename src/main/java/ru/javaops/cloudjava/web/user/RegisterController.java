@@ -1,5 +1,6 @@
 package ru.javaops.cloudjava.web.user;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,6 @@ import ru.javaops.cloudjava.model.User;
 import ru.javaops.cloudjava.to.UserTo;
 import ru.javaops.cloudjava.util.UserUtil;
 
-import javax.validation.Valid;
 import java.net.URI;
 
 import static ru.javaops.cloudjava.util.validation.ValidationUtil.checkNew;

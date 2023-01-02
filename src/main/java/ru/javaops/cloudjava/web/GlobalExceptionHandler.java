@@ -2,85 +2,55 @@ package ru.javaops.cloudjava.web;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.error.ErrorAttributeOptions;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
-import org.springframework.validation.BindException;
-import org.springframework.validation.BindingResult;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.*;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.javaops.cloudjava.error.AppException;
-import ru.javaops.cloudjava.util.validation.ValidationUtil;
 
-import javax.persistence.EntityNotFoundException;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.springframework.boot.web.error.ErrorAttributeOptions.Include.MESSAGE;
 
 @RestControllerAdvice
 @AllArgsConstructor
 @Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-    private final ErrorAttributes errorAttributes;
+    private final MessageSource messageSource;
 
-    @ExceptionHandler(AppException.class)
-    public ResponseEntity<?> appException(WebRequest request, AppException ex) {
-        log.error("ApplicationException: {}", ex.getMessage());
-        return createResponseEntity(request, ex.getOptions(), null, ex.getStatus());
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> entityNotFoundException(WebRequest request, EntityNotFoundException ex) {
-        log.error("EntityNotFoundException: {}", ex.getMessage());
-        return createResponseEntity(request, ErrorAttributeOptions.of(MESSAGE), null, HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-
-    @NonNull
     @Override
-    protected ResponseEntity<Object> handleExceptionInternal(
-            @NonNull Exception ex, Object body, @NonNull HttpHeaders headers, @NonNull HttpStatus status, @NonNull WebRequest request) {
-        log.error("Exception", ex);
-        super.handleExceptionInternal(ex, body, headers, status, request);
-        return createResponseEntity(request, ErrorAttributeOptions.of(), ValidationUtil.getRootCause(ex).getMessage(), status);
-    }
-
-    @NonNull
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            @NonNull HttpHeaders headers, @NonNull HttpStatus status, @NonNull WebRequest request) {
-        return handleBindingErrors(ex.getBindingResult(), request);
-    }
-
-    @NonNull
-    @Override
-    protected ResponseEntity<Object> handleBindException(
-            BindException ex, @NonNull HttpHeaders headers, @NonNull HttpStatus status, @NonNull WebRequest request) {
-        return handleBindingErrors(ex.getBindingResult(), request);
-    }
-
-    private ResponseEntity<Object> handleBindingErrors(BindingResult result, WebRequest request) {
-        String msg = result.getFieldErrors().stream()
-                .map(fe -> String.format("[%s] %s", fe.getField(), fe.getDefaultMessage()))
-                .collect(Collectors.joining("\n"));
-        return createResponseEntity(request, ErrorAttributeOptions.defaults(), msg, HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> ResponseEntity<T> createResponseEntity(WebRequest request, ErrorAttributeOptions options, String msg, HttpStatus status) {
-        Map<String, Object> body = errorAttributes.getErrorAttributes(request, options);
-        if (msg != null) {
-            body.put("message", msg);
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail body = ex.updateAndGetBody(this.messageSource, LocaleContextHolder.getLocale());
+        Map<String, String> invalidParams = new LinkedHashMap<>();
+        for (ObjectError error : ex.getBindingResult().getGlobalErrors()) {
+            invalidParams.put(error.getObjectName(), getErrorMessage(error));
         }
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        return (ResponseEntity<T>) ResponseEntity.status(status).body(body);
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            invalidParams.put(error.getField(), getErrorMessage(error));
+        }
+        body.setProperty("invalid_params", invalidParams);
+        body.setStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+        return handleExceptionInternal(ex, body, headers, HttpStatus.UNPROCESSABLE_ENTITY, request);
+    }
+
+//   https://howtodoinjava.com/spring-mvc/spring-problemdetail-errorresponse/#5-adding-problemdetail-to-custom-exceptions
+    @ExceptionHandler(AppException.class)
+    public ProblemDetail appException(AppException ex, WebRequest request) {
+        log.error("ApplicationException: {}", ex.getMessage());
+        return createProblemDetail(ex, ex.getStatusCode(), request);
+    }
+
+    private ProblemDetail createProblemDetail(Exception ex, HttpStatusCode statusCode, WebRequest request) {
+        return createProblemDetail(ex, statusCode, ex.getMessage(), null, null, request);
+    }
+
+    private String getErrorMessage(ObjectError error) {
+        return messageSource.getMessage(
+                error.getCode(), error.getArguments(), error.getDefaultMessage(), LocaleContextHolder.getLocale());
     }
 }

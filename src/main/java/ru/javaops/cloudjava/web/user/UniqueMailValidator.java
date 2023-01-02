@@ -1,5 +1,6 @@
 package ru.javaops.cloudjava.web.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -8,8 +9,6 @@ import org.springframework.validation.Errors;
 import ru.javaops.cloudjava.HasIdAndEmail;
 import ru.javaops.cloudjava.repository.UserRepository;
 import ru.javaops.cloudjava.web.SecurityUtil;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Component
 @AllArgsConstructor
