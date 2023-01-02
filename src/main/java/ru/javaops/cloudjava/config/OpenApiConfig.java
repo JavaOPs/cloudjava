@@ -1,43 +1,67 @@
 package ru.javaops.cloudjava.config;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.info.Contact;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.core.converter.ModelConverters;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import ru.javaops.cloudjava.model.User;
+import ru.javaops.cloudjava.to.UserTo;
 
 @Configuration
-//https://sabljakovich.medium.com/adding-basic-auth-authorization-option-to-openapi-swagger-documentation-java-spring-95abbede27e9
-@SecurityScheme(
-        name = "basicAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "basic"
-)
-@OpenAPIDefinition(
-        info = @Info(
-                title = "REST API documentation",
-                version = "1.0",
-                description = """
-                        Приложение по <a href='https://javaops.ru/view/cloudjava'>курсу CloudJava</a>
-                        <p><b>Тестовые креденшелы:</b><br>
-                        - user@gmail.com / password<br>
-                        - admin@javaops.ru / admin</p>
-                        """,
-                contact = @Contact(url = "https://javaops.ru/#contacts", name = "Grigory Kislin", email = "admin@javaops.ru")
-        ),
-        security = @SecurityRequirement(name = "basicAuth")
-)
 public class OpenApiConfig {
+    //    https://github.com/springdoc/springdoc-openapi/issues/915
+    //    https://springdoc.org/faq.html#how-can-i-set-a-global-header
 
     @Bean
-    public GroupedOpenApi api() {
+    GroupedOpenApi token() {
+        return GroupedOpenApi.builder()
+                .group("JWT Token")
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.addSecurityItem(new SecurityRequirement().addList("Authorization"))
+                            .components(new Components()
+                                    .addSecuritySchemes("Authorization", new SecurityScheme()
+                                            .in(SecurityScheme.In.HEADER)
+                                            .type(SecurityScheme.Type.HTTP)
+                                            .scheme("basic"))
+                            )
+                            .info(new Info().title("JWT Token").description("""
+                                    Приложение по <a href='https://javaops.ru/view/cloudjava'>курсу CloudJava</a>
+                                    <p>Тестовые креденшелы:<br>
+                                       - user@gmail.com / password<br>
+                                       - admin@javaops.ru / admin
+                                    </p>
+                                    """));
+
+                })
+                .pathsToMatch("/token")
+                .build();
+    }
+
+    @Bean
+    GroupedOpenApi api() {
         return GroupedOpenApi.builder()
                 .group("REST API")
-                .pathsToMatch("/token")
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.addSecurityItem(new SecurityRequirement().addList("Authorization"))
+                            .components(new Components()
+                                    .addSchemas("User", ModelConverters.getInstance().readAllAsResolvedSchema(User.class).schema)
+                                    .addSchemas("UserTo", ModelConverters.getInstance().readAllAsResolvedSchema(UserTo.class).schema)
+                                    .addSecuritySchemes("Authorization", new SecurityScheme()
+                                            .in(SecurityScheme.In.HEADER)
+                                            .type(SecurityScheme.Type.HTTP)
+                                            .scheme("bearer")
+                                            .name("JWT"))
+                            )
+                            .info(new Info().title("REST API").version("1.0").description("""
+                                    Приложение по <a href='https://javaops.ru/view/cloudjava'>курсу CloudJava</a>
+                                    <p>Авторизация через JWT Token (справа верху `Select a definition`)</p>
+                                    """));
+                })
+                .pathsToMatch("/api/**")
                 .build();
     }
 }
