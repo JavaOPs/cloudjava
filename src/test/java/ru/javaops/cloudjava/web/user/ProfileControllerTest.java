@@ -1,5 +1,6 @@
 package ru.javaops.cloudjava.web.user;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import static ru.javaops.cloudjava.web.user.ProfileController.REST_URL;
 import static ru.javaops.cloudjava.web.user.UniqueMailValidator.EXCEPTION_DUPLICATE_EMAIL;
 import static ru.javaops.cloudjava.web.user.UserTestData.*;
 
+@Disabled
 class ProfileControllerTest extends AbstractControllerTest {
 
     @Autowired

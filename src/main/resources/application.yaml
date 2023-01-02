@@ -1,3 +1,8 @@
+jwt:
+  private.key: classpath:keys/jwt.pem
+  public.key: classpath:keys/jwt.pub
+  expiry: 3600 # expiration in second
+
 #  https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 spring:
   jpa:

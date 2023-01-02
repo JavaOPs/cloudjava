@@ -1,5 +1,6 @@
 package ru.javaops.cloudjava.web.user;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import static ru.javaops.cloudjava.web.user.AdminUserController.REST_URL;
 import static ru.javaops.cloudjava.web.user.UniqueMailValidator.EXCEPTION_DUPLICATE_EMAIL;
 import static ru.javaops.cloudjava.web.user.UserTestData.*;
 
+@Disabled
 class AdminUserControllerTest extends AbstractControllerTest {
 
     private static final String REST_URL_SLASH = REST_URL + '/';

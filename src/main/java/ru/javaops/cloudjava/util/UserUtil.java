@@ -5,7 +5,7 @@ import ru.javaops.cloudjava.model.Role;
 import ru.javaops.cloudjava.model.User;
 import ru.javaops.cloudjava.to.UserTo;
 
-import static ru.javaops.cloudjava.config.SecurityConfiguration.PASSWORD_ENCODER;
+import static ru.javaops.cloudjava.config.LoginSecurityConfiguration.PASSWORD_ENCODER;
 
 @UtilityClass
 public class UserUtil {
