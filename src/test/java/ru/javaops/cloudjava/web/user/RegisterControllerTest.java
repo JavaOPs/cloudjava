@@ -15,6 +15,7 @@ import ru.javaops.cloudjava.web.AbstractControllerTest;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.javaops.cloudjava.web.user.RegisterController.REST_URL;
+import static ru.javaops.cloudjava.web.user.UserTestData.USER_MATCHER;
 
 class RegisterControllerTest extends AbstractControllerTest {
 
@@ -31,11 +32,11 @@ class RegisterControllerTest extends AbstractControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated());
 
-        User created = UserTestData.USER_MATCHER.readFromJson(action);
+        User created = USER_MATCHER.readFromJson(action);
         int newId = created.id();
         newUser.setId(newId);
-        UserTestData.USER_MATCHER.assertMatch(created, newUser);
-        UserTestData.USER_MATCHER.assertMatch(userRepository.getExisted(newId), newUser);
+        USER_MATCHER.assertMatch(created, newUser);
+        USER_MATCHER.assertMatch(userRepository.getExisted(newId), newUser);
     }
 
     @Test
